@@ -426,21 +426,45 @@ body.dark .sidebar::-webkit-scrollbar-thumb {
             return answer;
         }
 
-        async function loadData() {
-            try {
-                const response = await fetch('extracted_questions.json');
-                testData = await response.json();
-                populateTestSelector();
-                loadTest(0);
-            } catch (error) {
-                console.error('Error loading data:', error);
-                document.getElementById('questionContainer').innerHTML = `
-                    <div class="card">
-                        <p><i class="fas fa-exclamation-triangle"></i> Please ensure extracted_questions.json is in the same directory.</p>
-                    </div>
-                `;
+async function loadData() {
+    try {
+        const response = await fetch('extracted_questions.json');
+        testData = await response.json();
+
+        // Get URL param
+        const params = new URLSearchParams(window.location.search);
+        const testParam = params.get('x');
+
+        // If x exists, try finding matching test
+        if (testParam) {
+            const matchedIndex = testData.findIndex(test =>
+                test.test_name.toLowerCase().includes(testParam.toLowerCase())
+            );
+
+            if (matchedIndex !== -1) {
+                // Hide selector section completely
+                document.querySelector('.test-selector').style.display = 'none';
+
+                // Load only matched test
+                loadTest(matchedIndex);
+
+                return;
             }
         }
+
+        // Default behavior
+        populateTestSelector();
+        loadTest(0);
+
+    } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('questionContainer').innerHTML = `
+            <div class="card">
+                <p><i class="fas fa-exclamation-triangle"></i> Please ensure extracted_questions.json is in the same directory.</p>
+            </div>
+        `;
+    }
+}
 
         function populateTestSelector() {
             const select = document.getElementById('testSelect');
